@@ -3,8 +3,10 @@ package org.robolectric.shadows;
 import android.annotation.NonNull;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.os.Build.VERSION_CODES;
+import android.os.Handler;
 import com.google.common.base.Preconditions;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -20,6 +22,7 @@ public class ShadowCameraManager {
   private final Map<String, CameraCharacteristics> cameraIdToCharacteristics =
       new LinkedHashMap<>();
   private final Map<String, Boolean> cameraTorches = new HashMap<>();
+  private final Map<String, CameraDevice> cameraDevices = new HashMap<>();
 
   @Implementation
   @NonNull
@@ -44,6 +47,17 @@ public class ShadowCameraManager {
     cameraTorches.put(cameraId, enabled);
   }
 
+  @Implementation
+  protected void openCamera(
+      @NonNull String cameraId, @NonNull final CameraDevice.StateCallback callback, Handler handler)
+      throws CameraAccessException {
+    Preconditions.checkNotNull(cameraId);
+    Preconditions.checkNotNull(callback);
+    CameraDevice device = cameraDevices.get(cameraId);
+    Preconditions.checkNotNull(device);
+    callback.onOpened(device);
+  }
+
   /**
    * Adds the given cameraId and characteristics to this shadow.
    *
@@ -65,6 +79,20 @@ public class ShadowCameraManager {
     Preconditions.checkArgument(cameraIdToCharacteristics.keySet().contains(cameraId));
     Boolean torchState = cameraTorches.get(cameraId);
     return torchState;
+  }
+
+  /**
+   * Adds the given cameraId and cameraDevice to this shadow. This cameraDevice will be returned by
+   * a call to {@link #openCamera()} with the correct cameraId.
+   *
+   * @throws IllegalArgumentException if there's already an existing cameraDevice with the given id.
+   */
+  public void addCameraDevice(String cameraId, CameraDevice cameraDevice) {
+    Preconditions.checkNotNull(cameraId);
+    Preconditions.checkNotNull(cameraDevice);
+    Preconditions.checkArgument(!cameraDevices.containsKey(cameraId));
+
+    cameraDevices.put(cameraId, cameraDevice);
   }
 }
 
