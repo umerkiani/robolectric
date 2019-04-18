@@ -178,6 +178,18 @@ public class ShadowAppOpsManagerTest {
   }
 
   @Test
+  public void getOpsForPackage_hasNoThrowOps() {
+    appOps.noteOpNoThrow(OP_GPS, UID_1, PACKAGE_NAME1);
+    appOps.noteOpNoThrow(OP_SEND_SMS, UID_1, PACKAGE_NAME1);
+
+    // PACKAGE_NAME2 has ops.
+    assertOps(appOps.getOpsForPackage(UID_1, PACKAGE_NAME1, NO_OP_FILTER), OP_GPS, OP_SEND_SMS);
+
+    // PACKAGE_NAME2 has no ops.
+    assertOps(appOps.getOpsForPackage(UID_2, PACKAGE_NAME2, NO_OP_FILTER));
+  }
+
+  @Test
   @Config(minSdk = VERSION_CODES.LOLLIPOP)
   public void setRestrictions() {
     appOps.setRestriction(

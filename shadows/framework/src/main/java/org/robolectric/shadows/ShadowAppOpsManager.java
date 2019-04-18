@@ -153,6 +153,14 @@ public class ShadowAppOpsManager {
     return AppOpsManager.MODE_ALLOWED;
   }
 
+  @Implementation(minSdk = KITKAT)
+  public int noteOpNoThrow(int op, int uid, String packageName) {
+    mStoredOps.put(getInternalKey(uid, packageName), op);
+
+    // Permission check not currently implemented in this shadow.
+    return AppOpsManager.MODE_ALLOWED;
+  }
+
   @Implementation(minSdk = M)
   @HiddenApi
   protected int noteProxyOpNoThrow(int op, String proxiedPackageName) {
